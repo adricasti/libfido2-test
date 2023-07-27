@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebAuthn Test</title>
+</head>
+<style>
+  body {
+    font-family: neue-haas-unica, -system-ui, system-ui, sans-serif;
+  }
+  input {
+    display: block;
+    width: 400px;
+    margin-bottom: 10px;
+  }
+</style>
+<body>
+  <h1>WebAuthn - libfido2</h1>
+  <input type="text" id="username" placeholder="username" value="alice@example.com">
+  <input type="text" id="user_id">
+  <input type="text" id="rp_id">
+  <input type="text" id="client_data_hash">
+  <div>
+    <p>Put this in a <code>credential_file</code> and try:</p>
+    <p><code>fido2-cred -V -i credential_file</code></p>
+    <textarea cols="80" rows="7" wrap="off" id="credential_info"></textarea>
+  </div>
+  <button onclick="register()">Register</button>
+</body>
+<script src="cbor.js" type="text/javascript"></script>
+<script>
+  const publicKey = {
+    attestation: "direct",
+    authenticatorSelection: {
+      authenticatorAttachment: "cross-platform",
+      requireResidentKey: false,
+      userVerification: "discouraged",
+    },
+    challenge: new Uint8Array(32),
+    rp: {
+      name: "Example CORP",
+      id: window.location.hostname,
+    },
+    user: {
+      displayName: "Alice von Wunderland",
+      id: new Uint8Array(16),
+      name: "alice@example.com"
+    },
+    pubKeyCredParams: [
+      {
+        type: "public-key",
+        alg: -7,
+      },
+    ],
+  };
+  self.crypto.getRandomValues(publicKey.challenge);
+  self.crypto.getRandomValues(publicKey.user.id);
+
+  document.getElementById('rp_id').value = window.location.hostname;
+  document.getElementById('client_data_hash').value = arrayToBase64(publicKey.challenge);
+  document.getElementById('user_id').value = arrayToBase64(publicKey.user.id);
+
+  // Convert ArrayBuffer to base64url encoded string
+  function arrayToBase64(buffer) {
+    let binary = '';
+    let bytes = new Uint8Array(buffer);
+    let len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+    }
+    return window.btoa(binary);
+  }
+
+  function register() {
+    console.log(publicKey);
+    navigator.credentials.create({ publicKey })
+      .then((newCredentialInfo) => {
+        console.log(newCredentialInfo);
+        const attestationObject = CBOR.decode(newCredentialInfo.response.attestationObject);
+        const clientExtensionsResults =
+          newCredentialInfo.getClientExtensionResults();
+        document.getElementById('credential_info').value = 
+          arrayToBase64(publicKey.challenge) + '\n' +
+          window.location.hostname + '\n' +
+          attestationObject.fmt + '\n' +
+          arrayToBase64(attestationObject.authData) + '\n' +
+          arrayToBase64(newCredentialInfo.rawId) + '\n' +
+          arrayToBase64(attestationObject.attStmt.sig) + '\n' +
+          arrayToBase64(attestationObject.attStmt.x5c[0]);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }
+</script>
+</html>
