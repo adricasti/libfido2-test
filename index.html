@@ -24,7 +24,7 @@
   <input type="text" id="client_data_hash">
   <div>
     <p>After registration, put this in a file <code>assert_param</code> and try:</p>
-    <p><code>fido2-assert -G -i assert_param ioreg://xxxxxxxxxx</code></p>
+    <p><code>fido2-assert -G -h -i assert_param ioreg://xxxxxxxxxx</code></p>
     <textarea cols="80" rows="7" wrap="off" id="assert_param"></textarea>
   </div>
   <button onclick="register()">Register</button>
@@ -54,6 +54,9 @@
         alg: -7,
       },
     ],
+    extensions: {
+      hmacCreateSecret: true,
+    },
   };
   self.crypto.getRandomValues(publicKey.challenge);
   self.crypto.getRandomValues(publicKey.user.id);
@@ -81,10 +84,13 @@
         const attestationObject = CBOR.decode(newCredentialInfo.response.attestationObject);
         const clientExtensionsResults =
           newCredentialInfo.getClientExtensionResults();
+        let hmacSalt = new Uint8Array(32);
+        self.crypto.getRandomValues(hmacSalt);
         document.getElementById('assert_param').value = 
           arrayToBase64(publicKey.challenge) + '\n' +
           window.location.hostname + '\n' +
-          arrayToBase64(newCredentialInfo.rawId);
+          arrayToBase64(newCredentialInfo.rawId) + '\n' +
+          arrayToBase64(hmacSalt);
       })
       .catch((err) => {
         console.error(err);
