@@ -23,9 +23,9 @@
   <input type="text" id="rp_id">
   <input type="text" id="client_data_hash">
   <div>
-    <p>Put this in a <code>credential_file</code> and try:</p>
-    <p><code>fido2-cred -V -i credential_file</code></p>
-    <textarea cols="80" rows="7" wrap="off" id="credential_info"></textarea>
+    <p>After registration, put this in a file <code>assert_param</code> and try:</p>
+    <p><code>fido2-assert -G -i assert_param ioreg://xxxxxxxxxx</code></p>
+    <textarea cols="80" rows="7" wrap="off" id="assert_param"></textarea>
   </div>
   <button onclick="register()">Register</button>
 </body>
@@ -81,14 +81,10 @@
         const attestationObject = CBOR.decode(newCredentialInfo.response.attestationObject);
         const clientExtensionsResults =
           newCredentialInfo.getClientExtensionResults();
-        document.getElementById('credential_info').value = 
+        document.getElementById('assert_param').value = 
           arrayToBase64(publicKey.challenge) + '\n' +
           window.location.hostname + '\n' +
-          attestationObject.fmt + '\n' +
-          arrayToBase64(attestationObject.authData) + '\n' +
-          arrayToBase64(newCredentialInfo.rawId) + '\n' +
-          arrayToBase64(attestationObject.attStmt.sig) + '\n' +
-          arrayToBase64(attestationObject.attStmt.x5c[0]);
+          arrayToBase64(newCredentialInfo.rawId);
       })
       .catch((err) => {
         console.error(err);
