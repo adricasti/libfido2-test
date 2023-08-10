@@ -84,6 +84,8 @@
         const attestationObject = CBOR.decode(newCredentialInfo.response.attestationObject);
         const clientExtensionsResults =
           newCredentialInfo.getClientExtensionResults();
+        const fidoKey = newCredentialInfo.response.getPublicKey();
+        console.log("Public key: " + arrayToBase64(fidoKey));
         let hmacSalt = new Uint8Array(32);
         self.crypto.getRandomValues(hmacSalt);
         document.getElementById('assert_param').value = 
