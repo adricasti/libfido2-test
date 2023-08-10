@@ -35,7 +35,8 @@
     attestation: "direct",
     authenticatorSelection: {
       authenticatorAttachment: "cross-platform",
-      requireResidentKey: false,
+      residentKey: "required",
+      requireResidentKey: true,
       userVerification: "discouraged",
     },
     challenge: new Uint8Array(32),
